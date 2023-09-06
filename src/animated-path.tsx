@@ -1,17 +1,34 @@
-import React, { Component } from 'react'
+import React, { type ElementRef, Component } from 'react'
 import { InteractionManager } from 'react-native'
-import PropTypes from 'prop-types'
-import { Path } from 'react-native-svg'
+import { Path, type PathProps } from 'react-native-svg'
 import * as interpolate from 'd3-interpolate-path'
 
-class AnimatedPath extends Component {
-    constructor(props) {
+export interface AnimatedPathProps extends PathProps {
+    animate?: boolean | undefined
+    animationDuration?: number | undefined
+    renderPlaceholder?: (() => any) | undefined
+}
+
+class AnimatedPath extends Component<AnimatedPathProps, { d: AnimatedPathProps['d'] }> {
+    static defaultProps = {
+        animate: false,
+        animationDuration: 300,
+        renderPlaceholder: () => null,
+    }
+
+    component: ElementRef<typeof Path>
+    newD?: string
+    interpolator?: (t: number) => string
+    animation?: number
+    handle?: number
+
+    constructor(props: AnimatedPathProps) {
         super(props)
 
         this.state = { d: props.d }
     }
 
-    componentDidUpdate(props) {
+    componentDidUpdate(props: AnimatedPathProps) {
         const { d: newD, animate } = this.props
         const { d: oldD } = props
 
@@ -36,7 +53,7 @@ class AnimatedPath extends Component {
         this._clearInteraction()
     }
 
-    _animate(start) {
+    _animate(start?: number) {
         cancelAnimationFrame(this.animation)
         this.animation = requestAnimationFrame((timestamp) => {
             if (!start) {
@@ -88,19 +105,6 @@ class AnimatedPath extends Component {
             />
         )
     }
-}
-
-AnimatedPath.propTypes = {
-    animate: PropTypes.bool,
-    animationDuration: PropTypes.number,
-    renderPlaceholder: PropTypes.func,
-    ...Path.propTypes,
-}
-
-AnimatedPath.defaultProps = {
-    animate: false,
-    animationDuration: 300,
-    renderPlaceholder: () => null,
 }
 
 export default AnimatedPath

@@ -1,18 +1,26 @@
 import * as array from 'd3-array'
-import PropTypes from 'prop-types'
+import * as scale from 'd3-scale'
 import React, { PureComponent } from 'react'
-import { View } from 'react-native'
+import { type LayoutChangeEvent, View } from 'react-native'
 import Svg from 'react-native-svg'
 import Path from '../animated-path'
-import Chart from './chart'
+import type { AccessorFunction } from '../types'
+import Chart, { type ChartProps } from './chart'
 
-class ChartGrouped extends PureComponent {
+class ChartGrouped extends PureComponent<
+    ChartProps<{ data: Array<number | object | Array<unknown>>; svg: object }> & {
+        xAccessor?: AccessorFunction<number | object, number> | undefined
+        yAccessor?: AccessorFunction<number | object, number> | undefined
+    }
+> {
+    static defaultProps = Chart.defaultProps
+
     state = {
         width: 0,
         height: 0,
     }
 
-    _onLayout(event) {
+    _onLayout(event: LayoutChangeEvent) {
         const {
             nativeEvent: {
                 layout: { height, width },
@@ -21,7 +29,11 @@ class ChartGrouped extends PureComponent {
         this.setState({ height, width })
     }
 
-    createPaths() {
+    createPaths(_data: {
+        data: Array<Array<{ x: number; y: number }>>
+        x: (value: number) => number
+        y: (value: number) => number
+    }): Record<string, string[]> {
         throw 'Extending "ChartGrouped" requires you to override "createPaths'
     }
 
@@ -30,8 +42,6 @@ class ChartGrouped extends PureComponent {
             data,
             xAccessor,
             yAccessor,
-            yScale,
-            xScale,
             style,
             animate,
             animationDuration,
@@ -58,8 +68,8 @@ class ChartGrouped extends PureComponent {
             }))
         )
 
-        const yValues = array.merge(mappedData).map((item) => item.y)
-        const xValues = array.merge(mappedData).map((item) => item.x)
+        const yValues = array.merge<(typeof mappedData)[number][number]>(mappedData).map((item) => item.y)
+        const xValues = array.merge<(typeof mappedData)[number][number]>(mappedData).map((item) => item.x)
 
         const yExtent = array.extent([...yValues, gridMin, gridMax])
         const xExtent = array.extent([...xValues])
@@ -67,12 +77,14 @@ class ChartGrouped extends PureComponent {
         const { yMin = yExtent[0], yMax = yExtent[1], xMin = xExtent[0], xMax = xExtent[1] } = this.props
 
         //invert range to support svg coordinate system
-        const y = yScale()
+        const y = scale
+            .scaleLinear()
             .domain([yMin, yMax])
             .range([height - bottom, top])
             .clamp(clampY)
 
-        const x = xScale()
+        const x = scale
+            .scaleLinear()
             .domain([xMin, xMax])
             .range([left, width - right])
             .clamp(clampX)
@@ -101,7 +113,9 @@ class ChartGrouped extends PureComponent {
                     {height > 0 && width > 0 && (
                         <Svg style={{ height, width }}>
                             {React.Children.map(children, (child) => {
+                                // @ts-expect-error
                                 if (child && child.props.belowChart) {
+                                    // @ts-expect-error
                                     return React.cloneElement(child, extraProps)
                                 }
                                 return null
@@ -122,7 +136,9 @@ class ChartGrouped extends PureComponent {
                                 )
                             })}
                             {React.Children.map(children, (child) => {
+                                // @ts-expect-error
                                 if (child && !child.props.belowChart) {
+                                    // @ts-expect-error
                                     return React.cloneElement(child, extraProps)
                                 }
                                 return null
@@ -133,24 +149,6 @@ class ChartGrouped extends PureComponent {
             </View>
         )
     }
-}
-
-ChartGrouped.propTypes = {
-    ...Chart.propTypes,
-    data: PropTypes.arrayOf(
-        PropTypes.shape({
-            data: PropTypes.oneOfType([
-                PropTypes.arrayOf(PropTypes.object),
-                PropTypes.arrayOf(PropTypes.number),
-                PropTypes.arrayOf(PropTypes.array),
-            ]),
-            svg: PropTypes.object,
-        })
-    ).isRequired,
-}
-
-ChartGrouped.defaultProps = {
-    ...Chart.defaultProps,
 }
 
 export default ChartGrouped

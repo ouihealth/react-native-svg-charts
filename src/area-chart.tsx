@@ -1,13 +1,25 @@
 import * as shape from 'd3-shape'
-import PropTypes from 'prop-types'
 import Chart from './chart/chart'
 
-class AreaChart extends Chart {
-    createPaths({ data, x, y }) {
+class AreaChart<T> extends Chart<T, { start: number }> {
+    static defaultProps = {
+        ...Chart.defaultProps,
+        start: 0,
+    }
+
+    createPaths({
+        data,
+        x,
+        y,
+    }: {
+        data: Array<{ x: number; y: number }>
+        x: (value: number) => number
+        y: (value: number) => number
+    }): Record<string, string> {
         const { curve, start } = this.props
 
         const area = shape
-            .area()
+            .area<(typeof data)[number]>()
             .x((d) => x(d.x))
             .y0(y(start))
             .y1((d) => y(d.y))
@@ -15,7 +27,7 @@ class AreaChart extends Chart {
             .curve(curve)(data)
 
         const line = shape
-            .line()
+            .line<(typeof data)[number]>()
             .x((d) => x(d.x))
             .y((d) => y(d.y))
             .defined((item) => typeof item.y === 'number')
@@ -27,16 +39,6 @@ class AreaChart extends Chart {
             line,
         }
     }
-}
-
-AreaChart.propTypes = {
-    ...Chart.propTypes,
-    start: PropTypes.number,
-}
-
-AreaChart.defaultProps = {
-    ...Chart.defaultProps,
-    start: 0,
 }
 
 export default AreaChart
