@@ -16,17 +16,15 @@ export interface XAxisProps<T> extends AxisProps<T> {
 }
 
 class XAxis<T> extends PureComponent<XAxisProps<T>> {
-    getDefaultProps(): XAxisProps<T> {
-        return {
-            data: [],
-            spacingInner: 0.05,
-            spacingOuter: 0.05,
-            contentInset: {},
-            svg: {},
-            xAccessor: ({ index }) => index,
-            formatLabel: (value) => value,
-        }
-    }
+    static defaultProps = {
+        data: [],
+        spacingInner: 0.05,
+        spacingOuter: 0.05,
+        contentInset: {},
+        svg: {},
+        xAccessor: ({ index }) => index,
+        formatLabel: (value: any) => value,
+    } satisfies XAxisProps<unknown>
 
     state = {
         width: 0,

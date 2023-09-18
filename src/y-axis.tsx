@@ -17,18 +17,16 @@ export interface YAxisProps<T> extends AxisProps<T> {
 }
 
 class YAxis<T> extends PureComponent<YAxisProps<T>> {
-    getDefaultProps(): YAxisProps<T> {
-        return {
-            data: [],
-            numberOfTicks: 10,
-            spacingInner: 0.05,
-            spacingOuter: 0.05,
-            contentInset: {},
-            svg: {},
-            formatLabel: (value) => value && value.toString(),
-            yAccessor: ({ item }) => item,
-        }
-    }
+    static defaultProps = {
+        data: [],
+        numberOfTicks: 10,
+        spacingInner: 0.05,
+        spacingOuter: 0.05,
+        contentInset: {},
+        svg: {},
+        formatLabel: (value: any) => value && value.toString(),
+        yAccessor: ({ item }) => item,
+    } satisfies YAxisProps<unknown>
 
     state = {
         height: 0,
